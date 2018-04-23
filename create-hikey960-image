@@ -1,0 +1,24 @@
+#!/bin/bash
+
+if [ $(whoami) != "root" ]; then
+  echo "$0 can only be run as root!"
+fi
+
+if [ ! -d "$1" ]; then
+  echo "Usage: $0 path_to_rootfs imgfile"
+fi
+
+if [ "$2"x == "x" ]; then
+  echo "Usage" $0 path_to_rootfs imgfile"
+fi
+
+TMPEXT4FILE=$(mktemp /tmp/tmp.XXXXXXXX.ext4)
+
+# Create the sparse file
+dd if=/dev/zero of=$TMPEXT4FILE count=60 bs=1024 seek=1634304
+# Create a filesystem on it, with label rootfs, and fill it with our rootfs
+mkfs.ext4 -F -L rootfs $TMPEXT4FILE -d $1
+
+ext2simg -v $TMPEXT4FILE $2
+
+rmdir $TMPEXT4FILE
